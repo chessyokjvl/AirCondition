@@ -12,7 +12,7 @@
         body { 
             background-color: #f8f9fa; 
             font-family: 'Sarabun', sans-serif; 
-            padding-bottom: 50px; /* เว้นที่ว่างด้านล่างมือถือเผื่อการเลื่อน */
+            padding-bottom: 50px; 
         }
         .card { 
             border-radius: 15px; 
@@ -23,21 +23,18 @@
         .nav-link { cursor: pointer; font-size: 1.1rem; }
         .required-label::after { content: " *"; color: #dc3545; }
         
-        /* สไตล์สำหรับไฮไลท์เตือนการกรอกข้อมูล */
         .highlight-empty {
             background-color: #fff3cd !important;
             border-color: #dc3545 !important;
             border-width: 2px;
         }
 
-        /* ปรับขนาดตัวอักษรของตัวเลข Dashboard ให้พอดีกับทุกจอ */
         .dash-number {
             font-size: clamp(3rem, 5vw, 4.5rem); 
             line-height: 1;
             margin-top: 10px;
         }
 
-        /* ตกแต่งปุ่มให้กดง่ายบนมือถือ */
         .btn-xl {
             padding: 12px 20px;
             font-size: 1.2rem;
@@ -54,7 +51,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-xl">
-        <a class="navbar-brand fw-bold fs-4" href="#">❄️ ระบบทะเบียนเครื่องปรับอากาศ รพ.จิตเวชเลยราชนครินทร์</a>
+        <a class="navbar-brand fw-bold fs-4" href="#">❄️ ทะเบียนเครื่องปรับอากาศ JVL</a>
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -235,9 +232,31 @@
                         <div class="col-12 col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/สัปดาห์</label><input type="number" id="hrWeek" class="form-control check-required" required></div>
                     </div>
                     
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-6"><label class="form-label required-label">ปริมาตรห้อง (ลบ.ม.) (กว้างxยาวxสูง)</label><input type="text" id="roomVol" class="form-control check-required" placeholder="เช่น 4x4x3" required></div>
-                        <div class="col-12 col-md-6"><label class="form-label required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label><input type="number" id="totalAirRoom" class="form-control check-required" required></div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12"><label class="form-label required-label fw-bold text-secondary mb-0">ขนาดห้อง (เมตร)</label></div>
+                        <div class="col-4 col-md-3">
+                            <label class="form-label small text-muted mb-1">กว้าง (ม.)</label>
+                            <input type="number" step="0.01" id="roomWidth" class="form-control check-required room-dim" placeholder="เช่น 4" required>
+                        </div>
+                        <div class="col-4 col-md-3">
+                            <label class="form-label small text-muted mb-1">ยาว (ม.)</label>
+                            <input type="number" step="0.01" id="roomLength" class="form-control check-required room-dim" placeholder="เช่น 5" required>
+                        </div>
+                        <div class="col-4 col-md-3">
+                            <label class="form-label small text-muted mb-1">สูง (ม.)</label>
+                            <input type="number" step="0.01" id="roomHeight" class="form-control check-required room-dim" placeholder="เช่น 3" required>
+                        </div>
+                        <div class="col-12 col-md-3 mt-3 mt-md-auto">
+                            <label class="form-label small text-success fw-bold mb-1">ปริมาตร (ลบ.ม.)</label>
+                            <input type="text" id="roomVolDisplay" class="form-control bg-success bg-opacity-10 text-success fw-bold border-success" readonly placeholder="ระบบคำนวณให้อัตโนมัติ">
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-3 mt-1">
+                        <div class="col-12 col-md-12">
+                            <label class="form-label required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label>
+                            <input type="number" id="totalAirRoom" class="form-control check-required" required>
+                        </div>
                     </div>
                     
                     <div class="row g-3">
@@ -278,10 +297,12 @@
     
     let allData = [];
     let charts = {};
-    const requiredFieldsIds = ['hrDay', 'dayWeek', 'hrWeek', 'roomVol', 'totalAirRoom', 'sunlight', 'useFan'];
+    // เปลี่ยนจาก roomVol เป็นการเช็ค roomWidth, roomLength, roomHeight แทน
+    const requiredFieldsIds = ['hrDay', 'dayWeek', 'hrWeek', 'roomWidth', 'roomLength', 'roomHeight', 'totalAirRoom', 'sunlight', 'useFan'];
 
     window.onload = () => {
         fetchData();
+        
         requiredFieldsIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -289,7 +310,25 @@
                 el.addEventListener('change', highlightEmptyFields);
             }
         });
+
+        // ตรวจจับการพิมพ์ กว้าง ยาว สูง เพื่อคำนวณปริมาตร
+        document.querySelectorAll('.room-dim').forEach(el => {
+            el.addEventListener('input', calculateVolume);
+        });
     };
+
+    function calculateVolume() {
+        const w = parseFloat(document.getElementById('roomWidth').value);
+        const l = parseFloat(document.getElementById('roomLength').value);
+        const h = parseFloat(document.getElementById('roomHeight').value);
+        
+        if (!isNaN(w) && !isNaN(l) && !isNaN(h) && w > 0 && l > 0 && h > 0) {
+            const vol = (w * l * h).toFixed(2); // ทศนิยม 2 ตำแหน่ง
+            document.getElementById('roomVolDisplay').value = `${vol} ลบ.ม.`;
+        } else {
+            document.getElementById('roomVolDisplay').value = "";
+        }
+    }
 
     function showView(view) {
         document.getElementById('dashboard-view').classList.add('d-none');
@@ -300,7 +339,6 @@
         document.getElementById(`${view}-view`).classList.remove('d-none');
         document.getElementById(`nav-${view}`).classList.add('active');
         
-        // ปิด Navbar อัตโนมัติบนมือถือเมื่อกดเปลี่ยนหน้า
         const navbarToggler = document.querySelector('.navbar-toggler');
         const navbarCollapse = document.querySelector('.navbar-collapse');
         if (navbarCollapse.classList.contains('show')) {
@@ -383,6 +421,7 @@
         });
     }
 
+    // เงื่อนไขความสมบูรณ์ของ Dashboard ยังใช้อ้างอิงจากการมีค่า roomVol อยู่
     function isDataComplete(item) {
         return (item.hrDay && item.dayWeek && item.hrWeek && item.roomVol && item.sunlight && item.useFan && item.totalAirRoom);
     }
@@ -414,13 +453,11 @@
         if (charts[canvasId]) charts[canvasId].destroy();
         const ctx = document.getElementById(canvasId).getContext('2d');
         
-        // เพิ่มตั้งค่า maintainAspectRatio ให้ทำงานได้ดีบนจอเล็ก
         charts[canvasId] = new Chart(ctx, {
             type: 'doughnut',
             data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
             options: { 
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { 
                     title: { display: true, text: title, font: { size: 16, family: 'Sarabun' } },
                     legend: { position: 'bottom' }
@@ -436,17 +473,36 @@
         const item = allData[index];
         document.getElementById('rowId').value = item.rowId; 
         
-        const fields = ['assetId', 'brand', 'model', 'type', 'category', 'btu', 'seer', 'elecCost', 'installYear', 'hrDay', 'dayWeek', 'hrWeek', 'status', 'maintenance', 'owner', 'location', 'roomVol', 'sunlight', 'useFan', 'totalAirRoom', 'zone'];
+        // ข้อมูลทั่วไปที่ไม่ใช่ปริมาตรห้อง
+        const fields = ['assetId', 'brand', 'model', 'type', 'category', 'btu', 'seer', 'elecCost', 'installYear', 'hrDay', 'dayWeek', 'hrWeek', 'status', 'maintenance', 'owner', 'location', 'sunlight', 'useFan', 'totalAirRoom', 'zone'];
         fields.forEach(f => { 
             if(document.getElementById(f)) document.getElementById(f).value = item[f] || ""; 
         });
 
+        // จัดการแยกข้อมูล ปริมาตรห้อง (สมมติเก็บใน Sheet เป็น 4x5x3) ให้กลับมาใส่ช่อง กว้าง ยาว สูง
+        const rv = String(item.roomVol || "").toLowerCase();
+        // แยกตัวเลขด้วยเครื่องหมาย x หรือ * หรือ ลูกน้ำ
+        const parts = rv.split(/x|\*|,/); 
+        if (parts.length === 3) {
+            document.getElementById('roomWidth').value = parseFloat(parts[0].trim()) || "";
+            document.getElementById('roomLength').value = parseFloat(parts[1].trim()) || "";
+            document.getElementById('roomHeight').value = parseFloat(parts[2].trim()) || "";
+        } else {
+            // ถ้าเป็นข้อมูลเก่าที่มีแค่ตัวเลขปริมาตรรวมๆ จะปล่อยช่องว่างไว้ให้กรอกใหม่
+            document.getElementById('roomWidth').value = "";
+            document.getElementById('roomLength').value = "";
+            document.getElementById('roomHeight').value = "";
+        }
+        
+        calculateVolume(); // คำนวณปริมาตรโชว์
         highlightEmptyFields();
     }
 
     function prepareForm(type) {
         document.getElementById('airForm').reset();
         document.getElementById('rowId').value = ""; 
+        document.getElementById('roomVolDisplay').value = ""; // เคลียร์ช่องปริมาตร
+        
         if(type === 'new') {
             document.getElementById('select-air').value = "";
         }
@@ -461,6 +517,12 @@
         e.preventDefault(); 
         document.getElementById('loading').style.display = 'block';
 
+        // นำ กว้าง ยาว สูง มารวมกันเป็น String "4x5x3" เพื่อส่งไปเซฟลงคอลัมน์เดิม
+        const w = document.getElementById('roomWidth').value;
+        const l = document.getElementById('roomLength').value;
+        const h = document.getElementById('roomHeight').value;
+        const combinedRoomVol = (w && l && h) ? `${w}x${l}x${h}` : "";
+
         const payload = {
             action: 'saveData',
             rowId: document.getElementById('rowId').value,
@@ -473,9 +535,9 @@
                 dayWeek: document.getElementById('dayWeek').value, hrWeek: document.getElementById('hrWeek').value,
                 status: document.getElementById('status').value, maintenance: document.getElementById('maintenance').value,
                 owner: document.getElementById('owner').value, location: document.getElementById('location').value,
-                roomVol: document.getElementById('roomVol').value, sunlight: document.getElementById('sunlight').value,
-                useFan: document.getElementById('useFan').value, totalAirRoom: document.getElementById('totalAirRoom').value,
-                zone: document.getElementById('zone').value
+                roomVol: combinedRoomVol, // ส่งข้อมูลที่รวมแล้วไป
+                sunlight: document.getElementById('sunlight').value, useFan: document.getElementById('useFan').value, 
+                totalAirRoom: document.getElementById('totalAirRoom').value, zone: document.getElementById('zone').value
             }
         };
 
@@ -490,7 +552,6 @@
             document.getElementById('select-air').value = ""; 
             prepareForm('new');
             
-            // เลื่อนจอกลับไปด้านบนสุด
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
             fetchData(); 
