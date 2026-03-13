@@ -21,6 +21,12 @@
         }
         .nav-link { cursor: pointer; }
         .required-label::after { content: " *"; color: red; }
+        /* สไตล์พิเศษสำหรับช่องที่จำเป็นแต่ยังไม่ได้กรอก */
+        .highlight-empty {
+            background-color: #fff3cd !important;
+            border-color: #dc3545 !important;
+            border-width: 2px;
+        }
     </style>
 </head>
 <body>
@@ -104,14 +110,35 @@
             </div>
             
             <div class="mb-4 p-3 bg-light border rounded">
-                <label class="form-label fw-bold text-secondary">🔍 ค้นหาแอร์ที่มีในระบบเพื่อแก้ไข / เติมข้อมูล:</label>
-                <select id="select-air" class="form-select border-primary" onchange="loadAirDataToForm()">
-                    <option value="">-- เลือกเลขครุภัณฑ์ / สถานที่ติดตั้ง --</option>
-                </select>
+                <h6 class="fw-bold text-secondary mb-3">🔍 ค้นหาแอร์ที่มีในระบบเพื่อแก้ไข / เติมข้อมูล</h6>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small">กรองตาม ผู้รับผิดชอบ (ฝ่าย)</label>
+                        <select id="filter-manage-dept" class="form-select border-info" onchange="updateAirSelectOptions()">
+                            <option value="all">-- ทั้งหมด --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small">กรองตาม สถานที่ติดตั้ง</label>
+                        <select id="filter-manage-loc" class="form-select border-info" onchange="updateAirSelectOptions()">
+                            <option value="all">-- ทั้งหมด --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label fw-bold text-primary">เลือกแอร์ที่ต้องการจัดการ:</label>
+                    <select id="select-air" class="form-select border-primary fw-bold" onchange="loadAirDataToForm()">
+                        <option value="">-- เลือกรายการ --</option>
+                    </select>
+                </div>
             </div>
 
             <form id="airForm" onsubmit="submitForm(event)">
-                <input type="hidden" id="rowId"> <h5 class="text-secondary border-bottom pb-2 mt-2">📍 ข้อมูลพื้นฐาน</h5>
+                <input type="hidden" id="rowId"> 
+                
+                <h5 class="text-secondary border-bottom pb-2 mt-2">📍 ข้อมูลพื้นฐาน</h5>
                 <div class="row mb-3">
                     <div class="col-md-4"><label class="form-label">เลขครุภัณฑ์</label><input type="text" id="assetId" class="form-control" placeholder="ปล่อยว่างได้หากไม่ทราบ"></div>
                     <div class="col-md-4"><label class="form-label">ยี่ห้อ</label><input type="text" id="brand" class="form-control"></div>
@@ -176,19 +203,20 @@
                 </div>
 
                 <h5 class="text-danger border-bottom pb-2 mt-4">⚙️ ข้อมูลเชิงคุณภาพหน้างาน (ต้องระบุเพื่อการวิเคราะห์)</h5>
+                <p class="text-muted small">ช่องที่มีกรอบสีแดงและพื้นหลังสีเหลือง คือข้อมูลที่ยังขาดหาย กรุณาเติมให้ครบถ้วน</p>
                 <div class="row mb-3">
-                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/วัน</label><input type="number" id="hrDay" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label required-label">วันใช้งาน/สัปดาห์</label><input type="number" id="dayWeek" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/สัปดาห์</label><input type="number" id="hrWeek" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/วัน</label><input type="number" id="hrDay" class="form-control check-required" required></div>
+                    <div class="col-md-4"><label class="form-label required-label">วันใช้งาน/สัปดาห์</label><input type="number" id="dayWeek" class="form-control check-required" required></div>
+                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/สัปดาห์</label><input type="number" id="hrWeek" class="form-control check-required" required></div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-6"><label class="form-label required-label">ปริมาตรห้อง (ลบ.ม.) (กว้างxยาวxสูง)</label><input type="text" id="roomVol" class="form-control" required></div>
-                    <div class="col-md-6"><label class="form-label required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label><input type="number" id="totalAirRoom" class="form-control" required></div>
+                    <div class="col-md-6"><label class="form-label required-label">ปริมาตรห้อง (ลบ.ม.) (กว้างxยาวxสูง)</label><input type="text" id="roomVol" class="form-control check-required" required></div>
+                    <div class="col-md-6"><label class="form-label required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label><input type="number" id="totalAirRoom" class="form-control check-required" required></div>
                 </div>
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label required-label">การโดนแดด</label>
-                        <select id="sunlight" class="form-select" required>
+                        <select id="sunlight" class="form-select check-required" required>
                             <option value="">-- เลือก --</option>
                             <option value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
                             <option value="ครึ่งวันบ่าย">ครึ่งวันบ่าย</option>
@@ -198,7 +226,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label required-label">ใช้พัดลมช่วยเมื่อเปิดแอร์</label>
-                        <select id="useFan" class="form-select" required>
+                        <select id="useFan" class="form-select check-required" required>
                             <option value="">-- เลือก --</option>
                             <option value="ใช้">ใช้</option>
                             <option value="ไม่ใช้">ไม่ใช้</option>
@@ -217,18 +245,25 @@
 </div>
 
 <script>
-    // URL ของ Web App ใหม่ที่คุณให้มา
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSXRonriSwjNe5YE16vyhN_emjX_smPcbqjvN2Xtfutawl3hw7g2q2jozLt2Yi9RHj/exec";
     
     let allData = [];
     let charts = {};
+    const requiredFieldsIds = ['hrDay', 'dayWeek', 'hrWeek', 'roomVol', 'totalAirRoom', 'sunlight', 'useFan'];
 
-    // เริ่มต้นเมื่อเปิดเว็บ
     window.onload = () => {
         fetchData();
+        
+        // ผูก Event Listener ให้ตรวจสอบการกรอกข้อมูลแบบ Real-time
+        requiredFieldsIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', highlightEmptyFields);
+                el.addEventListener('change', highlightEmptyFields);
+            }
+        });
     };
 
-    // สลับหน้าจอ Dashboard และ Manage
     function showView(view) {
         document.getElementById('dashboard-view').classList.add('d-none');
         document.getElementById('manage-view').classList.add('d-none');
@@ -239,7 +274,6 @@
         document.getElementById(`nav-${view}`).classList.add('active');
     }
 
-    // ดึงข้อมูลจาก Google Sheet (GET)
     async function fetchData() {
         document.getElementById('loading').style.display = 'block';
         try {
@@ -248,58 +282,89 @@
             
             if(result.status === "error") {
                 alert("ข้อผิดพลาดจากฝั่ง Sheet: " + result.message);
-                document.getElementById('loading').style.display = 'none';
-                return;
+            } else {
+                allData = result.data || []; 
+                populateFiltersAndDropdowns();
+                renderDashboard();
             }
-
-            allData = result.data || []; 
-            populateFiltersAndDropdowns();
-            renderDashboard();
         } catch (error) {
             console.error("Error fetching data:", error);
-            alert("ไม่สามารถเชื่อมต่อกับ Google Sheet ได้ ลองรีเฟรชหน้าเว็บ หรือตรวจสอบว่า Deploy Code.gs ถูกต้องหรือไม่");
+            alert("ไม่สามารถเชื่อมต่อกับ Google Sheet ได้ ลองรีเฟรชหน้าเว็บ");
         }
         document.getElementById('loading').style.display = 'none';
     }
 
-    // เตรียม Dropdown
     function populateFiltersAndDropdowns() {
-        // Dropdown สำหรับหน้า Dashboard (กรองตามผู้รับผิดชอบ)
         const depts = new Set(allData.map(item => String(item.owner || "").trim()).filter(Boolean));
-        const deptSelect = document.getElementById('filter-dept');
-        deptSelect.innerHTML = '<option value="all">-- ทั้งหมด --</option>';
-        depts.forEach(dept => {
-            deptSelect.innerHTML += `<option value="${dept}">${dept}</option>`;
-        });
+        const locs = new Set(allData.map(item => String(item.location || "").trim()).filter(Boolean));
+        
+        // 1. Dropdown หน้า Dashboard
+        const deptSelectDash = document.getElementById('filter-dept');
+        deptSelectDash.innerHTML = '<option value="all">-- ทั้งหมด --</option>';
+        depts.forEach(dept => deptSelectDash.innerHTML += `<option value="${dept}">${dept}</option>`);
 
-        // Dropdown สำหรับหน้ากรอกข้อมูล (เลือกแอร์เพื่อแก้ไข)
+        // 2. Dropdown Filter ฝ่าย (หน้าจัดการ)
+        const manageDeptSelect = document.getElementById('filter-manage-dept');
+        manageDeptSelect.innerHTML = '<option value="all">-- ทั้งหมด --</option>';
+        depts.forEach(dept => manageDeptSelect.innerHTML += `<option value="${dept}">${dept}</option>`);
+
+        // 3. Dropdown Filter สถานที่ (หน้าจัดการ)
+        const manageLocSelect = document.getElementById('filter-manage-loc');
+        manageLocSelect.innerHTML = '<option value="all">-- ทั้งหมด --</option>';
+        locs.forEach(loc => manageLocSelect.innerHTML += `<option value="${loc}">${loc}</option>`);
+
+        // สร้างรายการแอร์ตั้งต้น
+        updateAirSelectOptions();
+    }
+
+    // ฟังก์ชันอัปเดตตัวเลือกแอร์ตาม Filter
+    function updateAirSelectOptions() {
+        const selectedDept = document.getElementById('filter-manage-dept').value;
+        const selectedLoc = document.getElementById('filter-manage-loc').value;
         const airSelect = document.getElementById('select-air');
-        airSelect.innerHTML = '<option value="">-- เลือกเลขครุภัณฑ์ / สถานที่ติดตั้ง --</option>';
+        
+        airSelect.innerHTML = '<option value="">-- เลือกรายการ --</option>';
+        
         allData.forEach((item, index) => {
-            let label = `${item.assetId || 'ไม่มีเลข'} - ${item.location || 'ไม่ระบุสถานที่'} [${item.owner || 'ไม่ระบุฝ่าย'}]`;
-            airSelect.innerHTML += `<option value="${index}">${label}</option>`;
+            const itemDept = String(item.owner || "").trim();
+            const itemLoc = String(item.location || "").trim();
+            
+            let matchDept = (selectedDept === 'all' || itemDept === selectedDept);
+            let matchLoc = (selectedLoc === 'all' || itemLoc === selectedLoc);
+            
+            if (matchDept && matchLoc) {
+                let label = `${item.assetId || 'ไม่มีเลข'} - ${item.location || 'ไม่ระบุสถานที่'} [${item.owner || 'ไม่ระบุฝ่าย'}]`;
+                airSelect.innerHTML += `<option value="${index}">${label}</option>`;
+            }
+        });
+        
+        prepareForm('new'); // รีเซ็ตฟอร์มทุกครั้งที่เปลี่ยน Filter
+    }
+
+    // ฟังก์ชันไฮไลท์สีช่องที่จำเป็นแต่ยังว่างอยู่
+    function highlightEmptyFields() {
+        requiredFieldsIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.value === "" || el.value === null) {
+                    el.classList.add('highlight-empty');
+                } else {
+                    el.classList.remove('highlight-empty');
+                }
+            }
         });
     }
 
-    // เช็คว่าข้อมูลจำเป็นถูกกรอกครบหรือไม่
     function isDataComplete(item) {
         return (item.hrDay && item.dayWeek && item.hrWeek && item.roomVol && item.sunlight && item.useFan && item.totalAirRoom);
     }
 
-    // วาด Dashboard
     function renderDashboard() {
         const filterDept = document.getElementById('filter-dept').value;
         let filteredData = allData;
-        
-        if (filterDept !== 'all') {
-            filteredData = allData.filter(item => String(item.owner || "").trim() === filterDept);
-        }
+        if (filterDept !== 'all') filteredData = allData.filter(item => String(item.owner || "").trim() === filterDept);
 
-        let completeCount = 0;
-        let inverterCount = 0;
-        let normalCount = 0;
-        let normalStatusCount = 0;
-        let brokenStatusCount = 0;
+        let completeCount = 0, inverterCount = 0, normalCount = 0, normalStatusCount = 0, brokenStatusCount = 0;
 
         filteredData.forEach(item => {
             if (isDataComplete(item)) completeCount++;
@@ -327,7 +392,6 @@
         });
     }
 
-    // โหลดข้อมูลใส่ Form
     function loadAirDataToForm() {
         const index = document.getElementById('select-air').value;
         if (index === "") { prepareForm('new'); return; }
@@ -341,18 +405,24 @@
                 document.getElementById(f).value = item[f] || ""; 
             }
         });
+
+        // พอโหลดข้อมูลเสร็จ ให้เช็คทันทีว่าช่องไหนยังแหว่งอยู่
+        highlightEmptyFields();
     }
 
-    // ล้าง Form 
     function prepareForm(type) {
         document.getElementById('airForm').reset();
         document.getElementById('rowId').value = ""; 
-        document.getElementById('select-air').value = "";
+        
+        // ถ้าเป็นการเรียกเพื่อเคลียร์หน้าจอทั้งหมด (ไม่ได้เลือกแอร์) ให้เอาไฮไลท์ออกให้หมดก่อน
+        requiredFieldsIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('highlight-empty');
+        });
     }
 
-    // ส่งข้อมูลไป Google Sheet (POST)
     async function submitForm(e) {
-        e.preventDefault(); // ป้องกันเว็บ Refresh
+        e.preventDefault(); 
         document.getElementById('loading').style.display = 'block';
 
         const payload = {
@@ -374,7 +444,6 @@
         };
 
         try {
-            // ใช้ text/plain เลี่ยง CORS Preflight บนเบราว์เซอร์
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 headers: {
@@ -384,12 +453,12 @@
             });
             
             alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            document.getElementById('select-air').value = ""; // รีเซ็ตการเลือกกลับไปหน้าว่าง
             prepareForm('new');
-            fetchData(); // โหลดข้อมูลใหม่หลังจากบันทึกเสร็จ
+            fetchData(); 
             showView('dashboard');
         } catch (error) {
             console.error("Error saving:", error);
-            // ฝั่ง Google Apps Script อาจจะไม่คืนค่ากลับมาตามปกติเมื่อเรียกแบบ No-CORS แต่ตัวมันเองบันทึกลง Sheet สำเร็จแล้ว
             alert("ส่งข้อมูลแล้ว (หากมีปัญหาขัดข้อง กรุณารีเฟรชเพื่อตรวจสอบ)");
             fetchData();
         }
