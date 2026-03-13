@@ -6,18 +6,28 @@
     <title>ระบบทะเบียนเครื่องปรับอากาศเชิงคุณภาพ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { background-color: #f4f7f6; font-family: 'Sarabun', sans-serif; }
-        .card { border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        body { 
+            background-color: #f4f7f6; 
+            font-family: 'Sarabun', sans-serif; 
+        }
+        .card { 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+            border: none;
+        }
         .nav-link { cursor: pointer; }
         .required-label::after { content: " *"; color: red; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">แอร์คลินิก (Air Clinic)</a>
+        <a class="navbar-brand fw-bold" href="#">❄️ Air Clinic</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -27,7 +37,7 @@
                     <a class="nav-link active" id="nav-dashboard" onclick="showView('dashboard')">📊 Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="nav-manage" onclick="showView('manage')">📝 จัดการข้อมูล / กรอกข้อมูล</a>
+                    <a class="nav-link" id="nav-manage" onclick="showView('manage')">📝 จัดการ/กรอกข้อมูล</a>
                 </li>
             </ul>
         </div>
@@ -38,36 +48,36 @@
 
     <div id="loading" class="text-center my-5" style="display: none;">
         <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2">กำลังโหลดข้อมูล...</p>
+        <p class="mt-2 text-muted">กำลังโหลดข้อมูล... โปรดรอสักครู่</p>
     </div>
 
     <div id="dashboard-view">
-        <div class="row mb-3">
+        <div class="row mb-4">
             <div class="col-md-4">
-                <label>กรองตามผู้รับผิดชอบ (ฝ่าย):</label>
-                <select id="filter-dept" class="form-select" onchange="renderDashboard()">
+                <label class="form-label fw-bold">กรองตามผู้รับผิดชอบ (ฝ่าย):</label>
+                <select id="filter-dept" class="form-select shadow-sm" onchange="renderDashboard()">
                     <option value="all">-- ทั้งหมด --</option>
-                    </select>
+                </select>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-4">
-                <div class="card bg-info text-white text-center p-3">
-                    <h5>จำนวนแอร์ทั้งหมด</h5>
-                    <h2 id="dash-total">0</h2>
+                <div class="card bg-info text-white text-center p-4">
+                    <h5 class="fw-bold">จำนวนแอร์ทั้งหมด</h5>
+                    <h1 id="dash-total" class="display-4 fw-bold">0</h1>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card bg-success text-white text-center p-3">
-                    <h5>ข้อมูลครบถ้วน</h5>
-                    <h2 id="dash-complete">0</h2>
+                <div class="card bg-success text-white text-center p-4">
+                    <h5 class="fw-bold">ข้อมูลครบถ้วน</h5>
+                    <h1 id="dash-complete" class="display-4 fw-bold">0</h1>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card bg-warning text-dark text-center p-3">
-                    <h5>รอการเติมข้อมูล</h5>
-                    <h2 id="dash-incomplete">0</h2>
+                <div class="card bg-warning text-dark text-center p-4">
+                    <h5 class="fw-bold">รอการเติมข้อมูล</h5>
+                    <h1 id="dash-incomplete" class="display-4 fw-bold">0</h1>
                 </div>
             </div>
         </div>
@@ -88,29 +98,29 @@
 
     <div id="manage-view" class="d-none">
         <div class="card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>ฟอร์มบันทึก/แก้ไข ข้อมูลเครื่องปรับอากาศ</h4>
-                <button class="btn btn-success" onclick="prepareForm('new')">+ เพิ่มแอร์ใหม่ (ไม่มีในระบบ)</button>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-primary mb-0">ฟอร์มบันทึก/แก้ไข ข้อมูลเครื่องปรับอากาศ</h4>
+                <button class="btn btn-success shadow-sm" onclick="prepareForm('new')">+ เพิ่มแอร์ใหม่ (ไม่มีในระบบ)</button>
             </div>
             
             <div class="mb-4 p-3 bg-light border rounded">
-                <label><strong>ค้นหาแอร์ที่มีในระบบเพื่อแก้ไข:</strong></label>
-                <select id="select-air" class="form-select" onchange="loadAirDataToForm()">
+                <label class="form-label fw-bold text-secondary">🔍 ค้นหาแอร์ที่มีในระบบเพื่อแก้ไข / เติมข้อมูล:</label>
+                <select id="select-air" class="form-select border-primary" onchange="loadAirDataToForm()">
                     <option value="">-- เลือกเลขครุภัณฑ์ / สถานที่ติดตั้ง --</option>
                 </select>
             </div>
 
             <form id="airForm" onsubmit="submitForm(event)">
-                <input type="hidden" id="rowId"> <h5 class="text-primary border-bottom pb-2">ข้อมูลพื้นฐาน</h5>
+                <input type="hidden" id="rowId"> <h5 class="text-secondary border-bottom pb-2 mt-2">📍 ข้อมูลพื้นฐาน</h5>
                 <div class="row mb-3">
-                    <div class="col-md-4"><label>เลขครุภัณฑ์</label><input type="text" id="assetId" class="form-control" placeholder="ปล่อยว่างได้หากเป็นแอร์ใหม่"></div>
-                    <div class="col-md-4"><label>ยี่ห้อ</label><input type="text" id="brand" class="form-control"></div>
-                    <div class="col-md-4"><label>รุ่น</label><input type="text" id="model" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">เลขครุภัณฑ์</label><input type="text" id="assetId" class="form-control" placeholder="ปล่อยว่างได้หากไม่ทราบ"></div>
+                    <div class="col-md-4"><label class="form-label">ยี่ห้อ</label><input type="text" id="brand" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">รุ่น</label><input type="text" id="model" class="form-control"></div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-3">
-                        <label>ชนิด</label>
+                        <label class="form-label">ชนิด</label>
                         <select id="type" class="form-select">
                             <option value="">-- เลือก --</option>
                             <option value="ธรรมดา">ธรรมดา</option>
@@ -118,16 +128,16 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label>ประเภท</label>
+                        <label class="form-label">ประเภท</label>
                         <select id="category" class="form-select">
                             <option value="">-- เลือก --</option>
                             <option value="แอร์แยกส่วน">แอร์แยกส่วน</option>
                             <option value="แอร์รวมศูนย์">แอร์รวมศูนย์</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><label>ขนาด (BTU/hr)</label><input type="number" id="btu" class="form-control"></div>
+                    <div class="col-md-3"><label class="form-label">ขนาด (BTU/hr)</label><input type="number" id="btu" class="form-control"></div>
                     <div class="col-md-3">
-                        <label>สถานะการใช้งาน</label>
+                        <label class="form-label">สถานะการใช้งาน</label>
                         <select id="status" class="form-select">
                             <option value="ปกติ">ปกติ</option>
                             <option value="ชำรุด">ชำรุด</option>
@@ -136,17 +146,17 @@
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-md-4"><label>ค่าประสิทธิภาพ SEER</label><input type="number" step="0.01" id="seer" class="form-control"></div>
-                    <div class="col-md-4"><label>ค่าไฟฟ้าต่อปี (Sticker)</label><input type="number" id="elecCost" class="form-control"></div>
-                    <div class="col-md-4"><label>ปีที่ติดตั้ง</label><input type="text" id="installYear" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">ค่าประสิทธิภาพ SEER</label><input type="number" step="0.01" id="seer" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">ค่าไฟฟ้าต่อปี (Sticker)</label><input type="number" id="elecCost" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">ปีที่ติดตั้ง</label><input type="text" id="installYear" class="form-control"></div>
                 </div>
 
-                <h5 class="text-primary border-bottom pb-2 mt-4">สถานที่และการรับผิดชอบ</h5>
+                <h5 class="text-secondary border-bottom pb-2 mt-4">🏢 สถานที่และการรับผิดชอบ</h5>
                 <div class="row mb-3">
-                    <div class="col-md-4"><label>ผู้รับผิดชอบ (ฝ่าย)</label><input type="text" id="owner" class="form-control"></div>
-                    <div class="col-md-4"><label>สถานที่ติดตั้ง</label><input type="text" id="location" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">ผู้รับผิดชอบ (ฝ่าย)</label><input type="text" id="owner" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label">สถานที่ติดตั้ง</label><input type="text" id="location" class="form-control"></div>
                     <div class="col-md-4">
-                        <label>Zone</label>
+                        <label class="form-label">Zone</label>
                         <select id="zone" class="form-select">
                             <option value="">-- เลือก --</option>
                             <option value="อำนวยการชั้น 1 ส่วนบริการ">อำนวยการชั้น 1 ส่วนบริการ</option>
@@ -165,20 +175,20 @@
                     </div>
                 </div>
 
-                <h5 class="text-danger border-bottom pb-2 mt-4">ข้อมูลเชิงคุณภาพหน้างาน (ใช้ชี้วัดความครบถ้วน)</h5>
+                <h5 class="text-danger border-bottom pb-2 mt-4">⚙️ ข้อมูลเชิงคุณภาพหน้างาน (ต้องระบุเพื่อการวิเคราะห์)</h5>
                 <div class="row mb-3">
-                    <div class="col-md-4"><label class="required-label">ชั่วโมงใช้งาน/วัน</label><input type="number" id="hrDay" class="form-control"></div>
-                    <div class="col-md-4"><label class="required-label">วันใช้งาน/สัปดาห์</label><input type="number" id="dayWeek" class="form-control"></div>
-                    <div class="col-md-4"><label class="required-label">ชั่วโมงใช้งาน/สัปดาห์</label><input type="number" id="hrWeek" class="form-control"></div>
+                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/วัน</label><input type="number" id="hrDay" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label required-label">วันใช้งาน/สัปดาห์</label><input type="number" id="dayWeek" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label required-label">ชั่วโมงใช้งาน/สัปดาห์</label><input type="number" id="hrWeek" class="form-control" required></div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-6"><label class="required-label">ปริมาตรห้อง (ลบ.ม.) (กว้างxยาวxสูง)</label><input type="text" id="roomVol" class="form-control"></div>
-                    <div class="col-md-6"><label class="required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label><input type="number" id="totalAirRoom" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label required-label">ปริมาตรห้อง (ลบ.ม.) (กว้างxยาวxสูง)</label><input type="text" id="roomVol" class="form-control" required></div>
+                    <div class="col-md-6"><label class="form-label required-label">จำนวนแอร์รวมในห้องนี้ (เครื่อง)</label><input type="number" id="totalAirRoom" class="form-control" required></div>
                 </div>
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <label class="required-label">การโดนแดด</label>
-                        <select id="sunlight" class="form-select">
+                        <label class="form-label required-label">การโดนแดด</label>
+                        <select id="sunlight" class="form-select" required>
                             <option value="">-- เลือก --</option>
                             <option value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
                             <option value="ครึ่งวันบ่าย">ครึ่งวันบ่าย</option>
@@ -187,8 +197,8 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="required-label">ใช้พัดลมช่วยเมื่อเปิดแอร์</label>
-                        <select id="useFan" class="form-select">
+                        <label class="form-label required-label">ใช้พัดลมช่วยเมื่อเปิดแอร์</label>
+                        <select id="useFan" class="form-select" required>
                             <option value="">-- เลือก --</option>
                             <option value="ใช้">ใช้</option>
                             <option value="ไม่ใช้">ไม่ใช้</option>
@@ -196,19 +206,19 @@
                     </div>
                 </div>
                 
-                <div class="row mb-3">
-                    <div class="col-md-12"><label>ซ่อมบำรุงครั้งล่าสุด (เดือน/ปี)</label><input type="text" id="maintenance" class="form-control"></div>
+                <div class="row mb-4">
+                    <div class="col-md-12"><label class="form-label">ซ่อมบำรุงครั้งล่าสุด (เดือน/ปี)</label><input type="text" id="maintenance" class="form-control"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 fs-5">💾 บันทึกข้อมูล</button>
+                <button type="submit" class="btn btn-primary w-100 fs-5 py-2 shadow-sm">💾 บันทึกข้อมูลเข้า Google Sheet</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    // URL ของ Web App ที่คุณ Deploy
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyo-3Dn8sFD2iMT5P3ku0GNPtr71eM1JVmkpT9dTHISxrdUlhteosWG41_5LTaAHZg/exec";
+    // URL ของ Web App ใหม่ที่คุณให้มา
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEBbKbE1FXxVZWHX7_s_BE78uEtuBugxRjqPOUCvbSjbRC5x-t7ScEH2T2Z6N7FoAu/exec";
     
     let allData = [];
     let charts = {};
@@ -218,7 +228,7 @@
         fetchData();
     };
 
-    // สลับหน้าจอ
+    // สลับหน้าจอ Dashboard และ Manage
     function showView(view) {
         document.getElementById('dashboard-view').classList.add('d-none');
         document.getElementById('manage-view').classList.add('d-none');
@@ -229,41 +239,49 @@
         document.getElementById(`nav-${view}`).classList.add('active');
     }
 
-    // ดึงข้อมูลจาก Google Sheet
+    // ดึงข้อมูลจาก Google Sheet (GET)
     async function fetchData() {
         document.getElementById('loading').style.display = 'block';
         try {
             const response = await fetch(SCRIPT_URL + "?action=getData");
             const result = await response.json();
-            allData = result.data; // data คือ array ของ object
             
+            if(result.status === "error") {
+                alert("ข้อผิดพลาดจากฝั่ง Sheet: " + result.message);
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            allData = result.data || []; 
             populateFiltersAndDropdowns();
             renderDashboard();
         } catch (error) {
             console.error("Error fetching data:", error);
-            alert("ไม่สามารถโหลดข้อมูลได้ ลองรีเฟรชหน้าเว็บ");
+            alert("ไม่สามารถเชื่อมต่อกับ Google Sheet ได้ ลองรีเฟรชหน้าเว็บ หรือตรวจสอบว่า Deploy Code.gs ถูกต้องหรือไม่");
         }
         document.getElementById('loading').style.display = 'none';
     }
 
-    // เตรียม Dropdown กรองฝ่าย และ Dropdown เลือกแอร์เพื่อแก้ไข
+    // เตรียม Dropdown
     function populateFiltersAndDropdowns() {
-        const depts = new Set(allData.map(item => item.owner).filter(Boolean));
+        // Dropdown สำหรับหน้า Dashboard (กรองตามผู้รับผิดชอบ)
+        const depts = new Set(allData.map(item => String(item.owner || "").trim()).filter(Boolean));
         const deptSelect = document.getElementById('filter-dept');
         deptSelect.innerHTML = '<option value="all">-- ทั้งหมด --</option>';
         depts.forEach(dept => {
             deptSelect.innerHTML += `<option value="${dept}">${dept}</option>`;
         });
 
+        // Dropdown สำหรับหน้ากรอกข้อมูล (เลือกแอร์เพื่อแก้ไข)
         const airSelect = document.getElementById('select-air');
         airSelect.innerHTML = '<option value="">-- เลือกเลขครุภัณฑ์ / สถานที่ติดตั้ง --</option>';
         allData.forEach((item, index) => {
-            let label = `${item.assetId || 'ไม่มีเลข'} - ${item.location || 'ไม่ระบุสถานที่'}`;
+            let label = `${item.assetId || 'ไม่มีเลข'} - ${item.location || 'ไม่ระบุสถานที่'} [${item.owner || 'ไม่ระบุฝ่าย'}]`;
             airSelect.innerHTML += `<option value="${index}">${label}</option>`;
         });
     }
 
-    // เช็คว่าข้อมูลครบหรือไม่ตามเงื่อนไข
+    // เช็คว่าข้อมูลจำเป็นถูกกรอกครบหรือไม่
     function isDataComplete(item) {
         return (item.hrDay && item.dayWeek && item.hrWeek && item.roomVol && item.sunlight && item.useFan && item.totalAirRoom);
     }
@@ -274,7 +292,7 @@
         let filteredData = allData;
         
         if (filterDept !== 'all') {
-            filteredData = allData.filter(item => item.owner === filterDept);
+            filteredData = allData.filter(item => String(item.owner || "").trim() === filterDept);
         }
 
         let completeCount = 0;
@@ -295,42 +313,46 @@
         document.getElementById('dash-complete').innerText = completeCount;
         document.getElementById('dash-incomplete').innerText = filteredData.length - completeCount;
 
-        drawChart('typeChart', 'สัดส่วนชนิดแอร์', ['Inverter', 'ธรรมดา'], [inverterCount, normalCount], ['#36A2EB', '#FF6384']);
-        drawChart('statusChart', 'สถานะการใช้งาน', ['ปกติ', 'ชำรุด'], [normalStatusCount, brokenStatusCount], ['#4BC0C0', '#FF9F40']);
+        drawChart('typeChart', 'สัดส่วนชนิดแอร์ (ธรรมดา vs Inverter)', ['Inverter', 'ธรรมดา'], [inverterCount, normalCount], ['#36A2EB', '#FF6384']);
+        drawChart('statusChart', 'สถานะการใช้งานแอร์', ['ปกติ', 'ชำรุด'], [normalStatusCount, brokenStatusCount], ['#4BC0C0', '#FF9F40']);
     }
 
     function drawChart(canvasId, title, labels, data, colors) {
         if (charts[canvasId]) charts[canvasId].destroy();
         const ctx = document.getElementById(canvasId).getContext('2d');
         charts[canvasId] = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
-            options: { plugins: { title: { display: true, text: title } } }
+            options: { plugins: { title: { display: true, text: title, font: { size: 16, family: 'Sarabun' } } } }
         });
     }
 
-    // โหลดข้อมูลใส่ Form เมื่อเลือกแอร์
+    // โหลดข้อมูลใส่ Form
     function loadAirDataToForm() {
         const index = document.getElementById('select-air').value;
         if (index === "") { prepareForm('new'); return; }
         
         const item = allData[index];
-        document.getElementById('rowId').value = item.rowId; // สำคัญเพื่ออัปเดตบรรทัดเดิม
+        document.getElementById('rowId').value = item.rowId; 
         
         const fields = ['assetId', 'brand', 'model', 'type', 'category', 'btu', 'seer', 'elecCost', 'installYear', 'hrDay', 'dayWeek', 'hrWeek', 'status', 'maintenance', 'owner', 'location', 'roomVol', 'sunlight', 'useFan', 'totalAirRoom', 'zone'];
-        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = item[f] || ""; });
+        fields.forEach(f => { 
+            if(document.getElementById(f)) {
+                document.getElementById(f).value = item[f] || ""; 
+            }
+        });
     }
 
-    // ล้าง Form สำหรับเพิ่มใหม่
+    // ล้าง Form 
     function prepareForm(type) {
         document.getElementById('airForm').reset();
-        document.getElementById('rowId').value = ""; // บ่งบอกว่าเป็นรายการใหม่
+        document.getElementById('rowId').value = ""; 
         document.getElementById('select-air').value = "";
     }
 
-    // ส่งข้อมูลไป Google Sheet
+    // ส่งข้อมูลไป Google Sheet (POST)
     async function submitForm(e) {
-        e.preventDefault();
+        e.preventDefault(); // ป้องกันเว็บ Refresh
         document.getElementById('loading').style.display = 'block';
 
         const payload = {
@@ -352,17 +374,23 @@
         };
 
         try {
-            // ใช้ POST mode no-cors หรือ x-www-form-urlencoded เพื่อเลี่ยงปัญหา CORS บน GitHub
+            // ใช้ text/plain เลี่ยง CORS Preflight บนเบราว์เซอร์
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
                 body: JSON.stringify(payload)
             });
+            
             alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            fetchData(); // โหลดข้อมูลใหม่
+            prepareForm('new');
+            fetchData(); // โหลดข้อมูลใหม่หลังจากบันทึกเสร็จ
             showView('dashboard');
         } catch (error) {
             console.error("Error saving:", error);
-            alert("บันทึกข้อมูลสำเร็จ (หรืออาจมีปัญหาเครือข่าย กรุณารีเฟรชเพื่อตรวจสอบ)");
+            // ฝั่ง Google Apps Script อาจจะไม่คืนค่ากลับมาตามปกติเมื่อเรียกแบบ No-CORS แต่ตัวมันเองบันทึกลง Sheet สำเร็จแล้ว
+            alert("ส่งข้อมูลแล้ว (หากมีปัญหาขัดข้อง กรุณารีเฟรชเพื่อตรวจสอบ)");
             fetchData();
         }
     }
