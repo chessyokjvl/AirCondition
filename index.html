@@ -6,6 +6,7 @@
     <title>ระบบทะเบียนเครื่องปรับอากาศเชิงคุณภาพ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -20,7 +21,6 @@
             border: none;
             height: 100%;
         }
-        /* เพิ่มเอฟเฟกต์เวลาเอาเมาส์ชี้กล่อง Dashboard ให้รู้ว่ากดได้ */
         .card-hover {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: pointer;
@@ -97,9 +97,10 @@
 
         <div class="row g-4 mb-4">
             <div class="col-12 col-md-4">
-                <div class="card bg-info text-white text-center p-4 d-flex flex-column justify-content-center">
-                    <h5 class="fw-bold mb-0">จำนวนแอร์ทั้งหมด</h5>
+                <div class="card bg-info text-white text-center p-4 d-flex flex-column justify-content-center card-hover" onclick="showDetailsModal('all')">
+                    <h5 class="fw-bold mb-0">จำนวนแอร์ทั้งหมด <i class="bi bi-list-columns-reverse"></i></h5>
                     <div id="dash-total" class="dash-number fw-bold">0</div>
+                    <small class="mt-2 text-white-50">(คลิกเพื่อดูตารางและ Export)</small>
                 </div>
             </div>
             <div class="col-12 col-md-4">
@@ -305,7 +306,7 @@
 </div>
 
 <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
     <div class="modal-content">
       <div class="modal-header" id="detailsModalHeader">
         <h5 class="modal-title fw-bold" id="detailsModalTitle">รายละเอียด</h5>
@@ -327,12 +328,10 @@
     let charts = {};
     const requiredFieldsIds = ['hrDay', 'dayWeek', 'hrWeek', 'roomWidth', 'roomLength', 'roomHeight', 'totalAirRoom', 'sunlight', 'useFan'];
     
-    // ตัวแปรสำหรับคุม Modal
     let detailsModalInstance;
 
     window.onload = () => {
         fetchData();
-        
         requiredFieldsIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -340,12 +339,7 @@
                 el.addEventListener('change', highlightEmptyFields);
             }
         });
-
-        document.querySelectorAll('.room-dim').forEach(el => {
-            el.addEventListener('input', calculateVolume);
-        });
-        
-        // กำหนดค่าเริ่มต้นให้ Modal
+        document.querySelectorAll('.room-dim').forEach(el => el.addEventListener('input', calculateVolume));
         detailsModalInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
     };
 
@@ -355,8 +349,7 @@
         const h = parseFloat(document.getElementById('roomHeight').value);
         
         if (!isNaN(w) && !isNaN(l) && !isNaN(h) && w > 0 && l > 0 && h > 0) {
-            const vol = (w * l * h).toFixed(2);
-            document.getElementById('roomVolDisplay').value = `${vol} ลบ.ม.`;
+            document.getElementById('roomVolDisplay').value = `${(w * l * h).toFixed(2)} ลบ.ม.`;
         } else {
             document.getElementById('roomVolDisplay').value = "";
         }
@@ -373,9 +366,7 @@
         
         const navbarToggler = document.querySelector('.navbar-toggler');
         const navbarCollapse = document.querySelector('.navbar-collapse');
-        if (navbarCollapse.classList.contains('show')) {
-            navbarToggler.click();
-        }
+        if (navbarCollapse.classList.contains('show')) navbarToggler.click();
     }
 
     async function fetchData() {
@@ -385,15 +376,15 @@
             const result = await response.json();
             
             if(result.status === "error") {
-                alert("ข้อผิดพลาดจากฝั่ง Sheet: " + result.message);
+                alert("ข้อผิดพลาด: " + result.message);
             } else {
                 allData = result.data || []; 
                 populateFiltersAndDropdowns();
                 renderDashboard();
             }
         } catch (error) {
-            console.error("Error fetching data:", error);
-            alert("ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้ ลองตรวจสอบอินเทอร์เน็ตหรือรีเฟรชหน้าเว็บ");
+            console.error(error);
+            alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
         }
         document.getElementById('loading').style.display = 'none';
     }
@@ -428,15 +419,10 @@
             const itemDept = String(item.owner || "").trim();
             const itemLoc = String(item.location || "").trim();
             
-            let matchDept = (selectedDept === 'all' || itemDept === selectedDept);
-            let matchLoc = (selectedLoc === 'all' || itemLoc === selectedLoc);
-            
-            if (matchDept && matchLoc) {
-                let label = `${item.assetId || 'ไม่มีเลข'} | ${item.location || 'ไม่ระบุสถานที่'} [${item.owner || 'ไม่ระบุฝ่าย'}]`;
-                airSelect.innerHTML += `<option value="${index}">${label}</option>`;
+            if ((selectedDept === 'all' || itemDept === selectedDept) && (selectedLoc === 'all' || itemLoc === selectedLoc)) {
+                airSelect.innerHTML += `<option value="${index}">${item.assetId || 'ไม่มีเลข'} | ${item.location || 'ไม่ระบุสถานที่'} [${item.owner || 'ไม่ระบุ'}]</option>`;
             }
         });
-        
         prepareForm('new');
     }
 
@@ -444,11 +430,8 @@
         requiredFieldsIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                if (el.value === "" || el.value === null) {
-                    el.classList.add('highlight-empty');
-                } else {
-                    el.classList.remove('highlight-empty');
-                }
+                if (!el.value) el.classList.add('highlight-empty');
+                else el.classList.remove('highlight-empty');
             }
         });
     }
@@ -459,11 +442,9 @@
 
     function renderDashboard() {
         const filterDept = document.getElementById('filter-dept').value;
-        let filteredData = allData;
-        if (filterDept !== 'all') filteredData = allData.filter(item => String(item.owner || "").trim() === filterDept);
+        let filteredData = filterDept === 'all' ? allData : allData.filter(item => String(item.owner || "").trim() === filterDept);
 
         let completeCount = 0, inverterCount = 0, normalCount = 0, normalStatusCount = 0, brokenStatusCount = 0;
-
         filteredData.forEach(item => {
             if (isDataComplete(item)) completeCount++;
             if (item.type === 'Inverter') inverterCount++;
@@ -482,53 +463,74 @@
 
     function drawChart(canvasId, title, labels, data, colors) {
         if (charts[canvasId]) charts[canvasId].destroy();
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        
-        charts[canvasId] = new Chart(ctx, {
-            type: 'doughnut',
-            data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                plugins: { 
-                    title: { display: true, text: title, font: { size: 16, family: 'Sarabun' } },
-                    legend: { position: 'bottom' }
-                } 
-            }
+        charts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
+            type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: title, font: { size: 16, family: 'Sarabun' } }, legend: { position: 'bottom' } } }
         });
     }
 
-    // ================= โค้ดใหม่: ฟังก์ชันแสดง Modal รายละเอียด =================
+    // ================= MODAL & EXPORT LOGIC =================
     function showDetailsModal(type) {
         const filterDept = document.getElementById('filter-dept').value;
         let grouped = {};
+        let tableData = []; // เก็บข้อมูลสำหรับตาราง (กรณี type === 'all')
         
-        // กรองข้อมูลตามฝ่ายที่เลือกใน Dashboard ก่อน (ถ้าเลือก "ทั้งหมด" ก็เอาหมด)
         allData.forEach((item, originalIndex) => {
             let dept = String(item.owner || "ไม่ระบุฝ่าย").trim();
             let passFilter = (filterDept === 'all' || dept === filterDept);
             let isComp = isDataComplete(item);
             
-            if (passFilter && ((type === 'complete' && isComp) || (type === 'incomplete' && !isComp))) {
-                if (!grouped[dept]) grouped[dept] = [];
-                // เก็บ originalIndex ไว้ด้วยเพื่อใช้อ้างอิงตอนส่งไปหน้า Form
-                grouped[dept].push({ item: item, originalIndex: originalIndex });
+            if (passFilter) {
+                if (type === 'all') {
+                    tableData.push(item);
+                } else if ((type === 'complete' && isComp) || (type === 'incomplete' && !isComp)) {
+                    if (!grouped[dept]) grouped[dept] = [];
+                    grouped[dept].push({ item: item, originalIndex: originalIndex });
+                }
             }
         });
 
-        // จัดเตรียม UI ของ Modal
         const modalHeader = document.getElementById('detailsModalHeader');
         const modalTitle = document.getElementById('detailsModalTitle');
         const modalBody = document.getElementById('detailsModalBody');
         
-        if (type === 'complete') {
+        if (type === 'all') {
+            modalHeader.className = "modal-header bg-info text-white";
+            modalTitle.innerHTML = `<i class="bi bi-list-columns-reverse"></i> รายการเครื่องปรับอากาศทั้งหมด`;
+            
+            let html = `
+            <div class="mb-3 d-flex flex-wrap gap-2">
+                <button class="btn btn-success fw-bold shadow-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i> ดาวน์โหลด Excel</button>
+                <button class="btn btn-secondary fw-bold shadow-sm" onclick="printTable()"><i class="bi bi-printer"></i> พิมพ์ / บันทึก PDF</button>
+                <span class="text-muted small ms-auto align-self-center">* การบันทึกเป็น PDF ให้กดพิมพ์ แล้วเลือกปลายทางเป็น Save as PDF</span>
+            </div>
+            <div class="table-responsive rounded shadow-sm border">
+                <table class="table table-hover table-bordered bg-white mb-0 text-nowrap" style="font-size: 0.9rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ลำดับ</th><th>เลขครุภัณฑ์</th><th>ผู้รับผิดชอบ</th><th>สถานที่ติดตั้ง</th>
+                            <th>ยี่ห้อ</th><th>ขนาด (BTU)</th><th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            if(tableData.length === 0) html += `<tr><td colspan="7" class="text-center">ไม่มีข้อมูล</td></tr>`;
+            tableData.forEach((item, idx) => {
+                let badge = item.status === 'ปกติ' ? 'bg-success' : (item.status === 'ชำรุด' ? 'bg-danger' : 'bg-secondary');
+                html += `<tr>
+                    <td>${idx + 1}</td><td>${item.assetId || '-'}</td><td>${item.owner || '-'}</td>
+                    <td>${item.location || '-'}</td><td>${item.brand || '-'}</td><td>${item.btu || '-'}</td>
+                    <td><span class="badge ${badge}">${item.status || '-'}</span></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            modalBody.innerHTML = html;
+
+        } else if (type === 'complete') {
             modalHeader.className = "modal-header bg-success text-white";
             modalTitle.innerHTML = `<i class="bi bi-check-circle-fill"></i> สรุปฝ่ายที่มีข้อมูลครบถ้วน`;
-            
-            let html = `<div class="table-responsive"><table class="table table-hover bg-white rounded shadow-sm">
-                        <thead class="table-light"><tr><th>ผู้รับผิดชอบ (ฝ่าย)</th><th class="text-center">จำนวนแอร์ที่ครบถ้วน</th></tr></thead><tbody>`;
-            for (let dept in grouped) {
-                html += `<tr><td>${dept}</td><td class="text-center fw-bold text-success">${grouped[dept].length}</td></tr>`;
-            }
+            let html = `<div class="table-responsive"><table class="table table-hover bg-white rounded shadow-sm"><thead class="table-light"><tr><th>ผู้รับผิดชอบ (ฝ่าย)</th><th class="text-center">จำนวนแอร์ที่ครบถ้วน</th></tr></thead><tbody>`;
+            for (let dept in grouped) html += `<tr><td>${dept}</td><td class="text-center fw-bold text-success">${grouped[dept].length}</td></tr>`;
             if(Object.keys(grouped).length === 0) html += `<tr><td colspan="2" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
             html += `</tbody></table></div>`;
             modalBody.innerHTML = html;
@@ -536,7 +538,6 @@
         } else if (type === 'incomplete') {
             modalHeader.className = "modal-header bg-warning text-dark";
             modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> รายการแอร์ที่รอการเติมข้อมูล`;
-            
             let html = `<div class="accordion shadow-sm" id="accordionIncomplete">`;
             let idx = 0;
             for (let dept in grouped) {
@@ -544,33 +545,20 @@
                 html += `
                 <div class="accordion-item border-0 mb-2 rounded">
                     <h2 class="accordion-header" id="heading${idx}">
-                        <button class="accordion-button collapsed fw-bold rounded bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}">
+                        <button class="accordion-button collapsed fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}">
                             <span class="badge bg-danger me-2">${items.length}</span> ${dept}
                         </button>
                     </h2>
                     <div id="collapse${idx}" class="accordion-collapse collapse" data-bs-parent="#accordionIncomplete">
-                        <div class="accordion-body p-0">
-                            <ul class="list-group list-group-flush rounded-bottom">`;
-                
+                        <div class="accordion-body p-0"><ul class="list-group list-group-flush">`;
                 items.forEach(obj => {
-                    let assetText = obj.item.assetId || 'ไม่มีเลขครุภัณฑ์';
-                    let locText = obj.item.location || 'ไม่ระบุสถานที่';
                     html += `
                         <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                            <div>
-                                <strong>${assetText}</strong><br>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ${locText}</span>
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill" onclick="jumpToEdit(${obj.originalIndex})">
-                                📝 กรอกข้อมูล
-                            </button>
+                            <div><strong>${obj.item.assetId || 'ไม่มีเลขครุภัณฑ์'}</strong><br><span class="small text-muted"><i class="bi bi-geo-alt"></i> ${obj.item.location || 'ไม่ระบุสถานที่'}</span></div>
+                            <button class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill" onclick="jumpToEdit(${obj.originalIndex})">📝 กรอกข้อมูล</button>
                         </li>`;
                 });
-                
-                html += `   </ul>
-                        </div>
-                    </div>
-                </div>`;
+                html += `</ul></div></div></div>`;
                 idx++;
             }
             if(Object.keys(grouped).length === 0) html += `<div class="text-center p-4 text-muted">สุดยอด! ไม่มีรายการตกค้าง</div>`;
@@ -581,117 +569,152 @@
         detailsModalInstance.show();
     }
 
-    // ฟังก์ชันสั่งกระโดดไปหน้าแก้ไขพร้อมเลือกแอร์ตัวนั้นทันที
     function jumpToEdit(originalIndex) {
-        // 1. ปิด Modal
         detailsModalInstance.hide();
-        
-        // 2. สลับไปหน้า Manage
         showView('manage');
-        
-        // 3. รีเซ็ตฟิลเตอร์หน้า Manage เป็น "ทั้งหมด" เพื่อให้หาเจอแน่นอน
         document.getElementById('filter-manage-dept').value = 'all';
         document.getElementById('filter-manage-loc').value = 'all';
-        updateAirSelectOptions(); // โหลด List Dropdown ใหม่
-        
-        // 4. เลือกรายการแอร์และสั่งโหลดข้อมูลเข้า Form
+        updateAirSelectOptions(); 
         document.getElementById('select-air').value = originalIndex;
         loadAirDataToForm();
-        
-        // 5. เลื่อนจอลงมาที่ฟอร์มนิดนึง
         window.scrollTo({ top: document.getElementById('airForm').offsetTop - 100, behavior: 'smooth' });
     }
-    // ====================================================================
+
+    // ฟังก์ชัน Export Excel
+    function exportExcel() {
+        const filterDept = document.getElementById('filter-dept').value;
+        let exportData = [];
+        allData.forEach((item, index) => {
+            let dept = String(item.owner || "").trim();
+            if (filterDept === 'all' || dept === filterDept) {
+                exportData.push({
+                    "ลำดับ": index + 1,
+                    "เลขครุภัณฑ์": item.assetId,
+                    "ยี่ห้อ": item.brand,
+                    "รุ่น": item.model,
+                    "ชนิด": item.type,
+                    "ประเภท": item.category,
+                    "ขนาด (BTU/hr)": item.btu,
+                    "ค่าประสิทธิภาพ SEER": item.seer,
+                    "ค่าไฟฟ้าต่อปี": item.elecCost,
+                    "ปีที่ติดตั้ง": item.installYear,
+                    "ชั่วโมงใช้งาน/วัน": item.hrDay,
+                    "วันใช้งาน/สัปดาห์": item.dayWeek,
+                    "ชั่วโมงใช้งาน/สัปดาห์": item.hrWeek,
+                    "สถานะการใช้งาน": item.status,
+                    "ซ่อมบำรุงล่าสุด": item.maintenance,
+                    "ผู้รับผิดชอบ": item.owner,
+                    "สถานที่ติดตั้ง": item.location,
+                    "ปริมาตรห้อง (ลบ.ม.)": item.roomVol,
+                    "การโดนแดด": item.sunlight,
+                    "ใช้พัดลมช่วย": item.useFan,
+                    "จำนวนแอร์รวมในห้อง": item.totalAirRoom,
+                    "Zone": item.zone
+                });
+            }
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลเครื่องปรับอากาศ");
+        XLSX.writeFile(workbook, "ทะเบียนแอร์_AirClinic.xlsx");
+    }
+
+    // ฟังก์ชัน Print / PDF
+    function printTable() {
+        const filterDept = document.getElementById('filter-dept').value;
+        let title = filterDept === 'all' ? "ทะเบียนเครื่องปรับอากาศทั้งหมด" : `ทะเบียนเครื่องปรับอากาศ - ฝ่าย: ${filterDept}`;
+
+        let printWindow = window.open('', '', 'height=800,width=1200');
+        printWindow.document.write(`
+            <html><head><title>Print Report</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+                body { font-family: 'Sarabun', sans-serif; padding: 20px; color: #333; }
+                h2 { text-align: center; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; font-size: 13px; }
+                th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+                th { background-color: #eee; }
+                @media print {
+                    @page { size: landscape; }
+                }
+            </style>
+            </head><body>
+            <h2>${title}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ลำดับ</th><th>เลขครุภัณฑ์</th><th>ผู้รับผิดชอบ</th>
+                        <th>สถานที่ติดตั้ง</th><th>ยี่ห้อ</th><th>ขนาด (BTU)</th><th>สถานะ</th>
+                    </tr>
+                </thead><tbody>
+        `);
+
+        let idx = 1;
+        allData.forEach(item => {
+            let dept = String(item.owner || "").trim();
+            if (filterDept === 'all' || dept === filterDept) {
+                printWindow.document.write(`
+                    <tr>
+                        <td>${idx++}</td><td>${item.assetId || '-'}</td><td>${item.owner || '-'}</td>
+                        <td>${item.location || '-'}</td><td>${item.brand || '-'}</td>
+                        <td>${item.btu || '-'}</td><td>${item.status || '-'}</td>
+                    </tr>
+                `);
+            }
+        });
+
+        printWindow.document.write('</tbody></table></body></html>');
+        printWindow.document.close();
+        
+        // รอให้ Font โหลดนิดนึงแล้วเรียกคำสั่ง Print
+        setTimeout(() => { printWindow.print(); }, 500);
+    }
+    // ==========================================================
 
     function loadAirDataToForm() {
         const index = document.getElementById('select-air').value;
         if (index === "") { prepareForm('new'); return; }
-        
         const item = allData[index];
         document.getElementById('rowId').value = item.rowId; 
-        
         const fields = ['assetId', 'brand', 'model', 'type', 'category', 'btu', 'seer', 'elecCost', 'installYear', 'hrDay', 'dayWeek', 'hrWeek', 'status', 'maintenance', 'owner', 'location', 'sunlight', 'useFan', 'totalAirRoom', 'zone'];
-        fields.forEach(f => { 
-            if(document.getElementById(f)) document.getElementById(f).value = item[f] || ""; 
-        });
-
-        const rv = String(item.roomVol || "").toLowerCase();
-        const parts = rv.split(/x|\*|,/); 
+        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = item[f] || ""; });
+        const parts = String(item.roomVol || "").toLowerCase().split(/x|\*|,/); 
         if (parts.length === 3) {
             document.getElementById('roomWidth').value = parseFloat(parts[0].trim()) || "";
             document.getElementById('roomLength').value = parseFloat(parts[1].trim()) || "";
             document.getElementById('roomHeight').value = parseFloat(parts[2].trim()) || "";
         } else {
-            document.getElementById('roomWidth').value = "";
-            document.getElementById('roomLength').value = "";
-            document.getElementById('roomHeight').value = "";
+            document.getElementById('roomWidth').value = ""; document.getElementById('roomLength').value = ""; document.getElementById('roomHeight').value = "";
         }
-        
-        calculateVolume(); 
-        highlightEmptyFields();
+        calculateVolume(); highlightEmptyFields();
     }
 
     function prepareForm(type) {
-        document.getElementById('airForm').reset();
-        document.getElementById('rowId').value = ""; 
-        document.getElementById('roomVolDisplay').value = ""; 
-        
-        if(type === 'new') {
-            document.getElementById('select-air').value = "";
-        }
-        
-        requiredFieldsIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.remove('highlight-empty');
-        });
+        document.getElementById('airForm').reset(); document.getElementById('rowId').value = ""; document.getElementById('roomVolDisplay').value = ""; 
+        if(type === 'new') document.getElementById('select-air').value = "";
+        requiredFieldsIds.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('highlight-empty'); });
     }
 
     async function submitForm(e) {
-        e.preventDefault(); 
-        document.getElementById('loading').style.display = 'block';
-
-        const w = document.getElementById('roomWidth').value;
-        const l = document.getElementById('roomLength').value;
-        const h = document.getElementById('roomHeight').value;
-        const combinedRoomVol = (w && l && h) ? `${w}x${l}x${h}` : "";
-
+        e.preventDefault(); document.getElementById('loading').style.display = 'block';
+        const w = document.getElementById('roomWidth').value, l = document.getElementById('roomLength').value, h = document.getElementById('roomHeight').value;
         const payload = {
-            action: 'saveData',
-            rowId: document.getElementById('rowId').value,
+            action: 'saveData', rowId: document.getElementById('rowId').value,
             data: {
-                assetId: document.getElementById('assetId').value, brand: document.getElementById('brand').value,
-                model: document.getElementById('model').value, type: document.getElementById('type').value,
-                category: document.getElementById('category').value, btu: document.getElementById('btu').value,
-                seer: document.getElementById('seer').value, elecCost: document.getElementById('elecCost').value,
-                installYear: document.getElementById('installYear').value, hrDay: document.getElementById('hrDay').value,
-                dayWeek: document.getElementById('dayWeek').value, hrWeek: document.getElementById('hrWeek').value,
-                status: document.getElementById('status').value, maintenance: document.getElementById('maintenance').value,
-                owner: document.getElementById('owner').value, location: document.getElementById('location').value,
-                roomVol: combinedRoomVol, 
-                sunlight: document.getElementById('sunlight').value, useFan: document.getElementById('useFan').value, 
-                totalAirRoom: document.getElementById('totalAirRoom').value, zone: document.getElementById('zone').value
+                assetId: document.getElementById('assetId').value, brand: document.getElementById('brand').value, model: document.getElementById('model').value, type: document.getElementById('type').value,
+                category: document.getElementById('category').value, btu: document.getElementById('btu').value, seer: document.getElementById('seer').value, elecCost: document.getElementById('elecCost').value,
+                installYear: document.getElementById('installYear').value, hrDay: document.getElementById('hrDay').value, dayWeek: document.getElementById('dayWeek').value, hrWeek: document.getElementById('hrWeek').value,
+                status: document.getElementById('status').value, maintenance: document.getElementById('maintenance').value, owner: document.getElementById('owner').value, location: document.getElementById('location').value,
+                roomVol: (w && l && h) ? `${w}x${l}x${h}` : "", sunlight: document.getElementById('sunlight').value, useFan: document.getElementById('useFan').value, totalAirRoom: document.getElementById('totalAirRoom').value, zone: document.getElementById('zone').value
             }
         };
-
         try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
-            
-            alert("บันทึกข้อมูลสำเร็จ!");
-            document.getElementById('select-air').value = ""; 
-            prepareForm('new');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            fetchData(); 
-            showView('dashboard');
+            await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+            alert("บันทึกข้อมูลสำเร็จ!"); document.getElementById('select-air').value = ""; prepareForm('new'); window.scrollTo({ top: 0, behavior: 'smooth' });
+            fetchData(); showView('dashboard');
         } catch (error) {
-            console.error("Error saving:", error);
-            alert("ส่งข้อมูลแล้ว (ระบบอาจใช้เวลาอัปเดตสักครู่ กรุณารีเฟรช)");
-            fetchData();
+            alert("ส่งข้อมูลแล้ว (ระบบอาจใช้เวลาอัปเดตสักครู่ กรุณารีเฟรช)"); fetchData();
         }
     }
 </script>
