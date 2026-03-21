@@ -20,6 +20,16 @@
             border: none;
             height: 100%;
         }
+        /* เพิ่มเอฟเฟกต์เวลาเอาเมาส์ชี้กล่อง Dashboard ให้รู้ว่ากดได้ */
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
         .nav-link { cursor: pointer; font-size: 1.1rem; }
         .required-label::after { content: " *"; color: #dc3545; }
         
@@ -51,7 +61,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-xl">
-        <a class="navbar-brand fw-bold fs-4" href="#">❄️ ทะเบียนเครื่องปรับอากาศ JVL</a>
+        <a class="navbar-brand fw-bold fs-4" href="#">❄️ทะเบียนเครื่องปรับอากาศ JVL</a>
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -93,15 +103,17 @@
                 </div>
             </div>
             <div class="col-12 col-md-4">
-                <div class="card bg-success text-white text-center p-4 d-flex flex-column justify-content-center">
-                    <h5 class="fw-bold mb-0">ข้อมูลครบถ้วน</h5>
+                <div class="card bg-success text-white text-center p-4 d-flex flex-column justify-content-center card-hover" onclick="showDetailsModal('complete')">
+                    <h5 class="fw-bold mb-0">ข้อมูลครบถ้วน <i class="bi bi-hand-index-thumb"></i></h5>
                     <div id="dash-complete" class="dash-number fw-bold">0</div>
+                    <small class="mt-2 text-white-50">(คลิกเพื่อดูรายละเอียด)</small>
                 </div>
             </div>
             <div class="col-12 col-md-4">
-                <div class="card bg-warning text-dark text-center p-4 d-flex flex-column justify-content-center">
-                    <h5 class="fw-bold mb-0">รอการเติมข้อมูล</h5>
+                <div class="card bg-warning text-dark text-center p-4 d-flex flex-column justify-content-center card-hover" onclick="showDetailsModal('incomplete')">
+                    <h5 class="fw-bold mb-0">รอการเติมข้อมูล <i class="bi bi-hand-index-thumb"></i></h5>
                     <div id="dash-incomplete" class="dash-number fw-bold">0</div>
+                    <small class="mt-2 text-muted">(คลิกเพื่อดูและเติมข้อมูล)</small>
                 </div>
             </div>
         </div>
@@ -154,7 +166,7 @@
                 <div>
                     <label class="form-label fw-bold text-primary mb-1">เลือกแอร์ที่ต้องการจัดการ:</label>
                     <select id="select-air" class="form-select form-select-lg border-primary fw-bold" onchange="loadAirDataToForm()">
-                        <option value="">-- เลือกรายการ --</option>
+                        <option value="">-- กรุณาเลือกรายการ --</option>
                     </select>
                 </div>
             </div>
@@ -292,13 +304,31 @@
     </div>
 </div>
 
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" id="detailsModalHeader">
+        <h5 class="modal-title fw-bold" id="detailsModalTitle">รายละเอียด</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bg-light" id="detailsModalBody">
+        </div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSXRonriSwjNe5YE16vyhN_emjX_smPcbqjvN2Xtfutawl3hw7g2q2jozLt2Yi9RHj/exec";
     
     let allData = [];
     let charts = {};
-    // เปลี่ยนจาก roomVol เป็นการเช็ค roomWidth, roomLength, roomHeight แทน
     const requiredFieldsIds = ['hrDay', 'dayWeek', 'hrWeek', 'roomWidth', 'roomLength', 'roomHeight', 'totalAirRoom', 'sunlight', 'useFan'];
+    
+    // ตัวแปรสำหรับคุม Modal
+    let detailsModalInstance;
 
     window.onload = () => {
         fetchData();
@@ -311,10 +341,12 @@
             }
         });
 
-        // ตรวจจับการพิมพ์ กว้าง ยาว สูง เพื่อคำนวณปริมาตร
         document.querySelectorAll('.room-dim').forEach(el => {
             el.addEventListener('input', calculateVolume);
         });
+        
+        // กำหนดค่าเริ่มต้นให้ Modal
+        detailsModalInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
     };
 
     function calculateVolume() {
@@ -323,7 +355,7 @@
         const h = parseFloat(document.getElementById('roomHeight').value);
         
         if (!isNaN(w) && !isNaN(l) && !isNaN(h) && w > 0 && l > 0 && h > 0) {
-            const vol = (w * l * h).toFixed(2); // ทศนิยม 2 ตำแหน่ง
+            const vol = (w * l * h).toFixed(2);
             document.getElementById('roomVolDisplay').value = `${vol} ลบ.ม.`;
         } else {
             document.getElementById('roomVolDisplay').value = "";
@@ -421,7 +453,6 @@
         });
     }
 
-    // เงื่อนไขความสมบูรณ์ของ Dashboard ยังใช้อ้างอิงจากการมีค่า roomVol อยู่
     function isDataComplete(item) {
         return (item.hrDay && item.dayWeek && item.hrWeek && item.roomVol && item.sunlight && item.useFan && item.totalAirRoom);
     }
@@ -466,6 +497,112 @@
         });
     }
 
+    // ================= โค้ดใหม่: ฟังก์ชันแสดง Modal รายละเอียด =================
+    function showDetailsModal(type) {
+        const filterDept = document.getElementById('filter-dept').value;
+        let grouped = {};
+        
+        // กรองข้อมูลตามฝ่ายที่เลือกใน Dashboard ก่อน (ถ้าเลือก "ทั้งหมด" ก็เอาหมด)
+        allData.forEach((item, originalIndex) => {
+            let dept = String(item.owner || "ไม่ระบุฝ่าย").trim();
+            let passFilter = (filterDept === 'all' || dept === filterDept);
+            let isComp = isDataComplete(item);
+            
+            if (passFilter && ((type === 'complete' && isComp) || (type === 'incomplete' && !isComp))) {
+                if (!grouped[dept]) grouped[dept] = [];
+                // เก็บ originalIndex ไว้ด้วยเพื่อใช้อ้างอิงตอนส่งไปหน้า Form
+                grouped[dept].push({ item: item, originalIndex: originalIndex });
+            }
+        });
+
+        // จัดเตรียม UI ของ Modal
+        const modalHeader = document.getElementById('detailsModalHeader');
+        const modalTitle = document.getElementById('detailsModalTitle');
+        const modalBody = document.getElementById('detailsModalBody');
+        
+        if (type === 'complete') {
+            modalHeader.className = "modal-header bg-success text-white";
+            modalTitle.innerHTML = `<i class="bi bi-check-circle-fill"></i> สรุปฝ่ายที่มีข้อมูลครบถ้วน`;
+            
+            let html = `<div class="table-responsive"><table class="table table-hover bg-white rounded shadow-sm">
+                        <thead class="table-light"><tr><th>ผู้รับผิดชอบ (ฝ่าย)</th><th class="text-center">จำนวนแอร์ที่ครบถ้วน</th></tr></thead><tbody>`;
+            for (let dept in grouped) {
+                html += `<tr><td>${dept}</td><td class="text-center fw-bold text-success">${grouped[dept].length}</td></tr>`;
+            }
+            if(Object.keys(grouped).length === 0) html += `<tr><td colspan="2" class="text-center text-muted">ไม่มีข้อมูล</td></tr>`;
+            html += `</tbody></table></div>`;
+            modalBody.innerHTML = html;
+            
+        } else if (type === 'incomplete') {
+            modalHeader.className = "modal-header bg-warning text-dark";
+            modalTitle.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> รายการแอร์ที่รอการเติมข้อมูล`;
+            
+            let html = `<div class="accordion shadow-sm" id="accordionIncomplete">`;
+            let idx = 0;
+            for (let dept in grouped) {
+                let items = grouped[dept];
+                html += `
+                <div class="accordion-item border-0 mb-2 rounded">
+                    <h2 class="accordion-header" id="heading${idx}">
+                        <button class="accordion-button collapsed fw-bold rounded bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}">
+                            <span class="badge bg-danger me-2">${items.length}</span> ${dept}
+                        </button>
+                    </h2>
+                    <div id="collapse${idx}" class="accordion-collapse collapse" data-bs-parent="#accordionIncomplete">
+                        <div class="accordion-body p-0">
+                            <ul class="list-group list-group-flush rounded-bottom">`;
+                
+                items.forEach(obj => {
+                    let assetText = obj.item.assetId || 'ไม่มีเลขครุภัณฑ์';
+                    let locText = obj.item.location || 'ไม่ระบุสถานที่';
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <strong>${assetText}</strong><br>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ${locText}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill" onclick="jumpToEdit(${obj.originalIndex})">
+                                📝 กรอกข้อมูล
+                            </button>
+                        </li>`;
+                });
+                
+                html += `   </ul>
+                        </div>
+                    </div>
+                </div>`;
+                idx++;
+            }
+            if(Object.keys(grouped).length === 0) html += `<div class="text-center p-4 text-muted">สุดยอด! ไม่มีรายการตกค้าง</div>`;
+            html += `</div>`;
+            modalBody.innerHTML = html;
+        }
+
+        detailsModalInstance.show();
+    }
+
+    // ฟังก์ชันสั่งกระโดดไปหน้าแก้ไขพร้อมเลือกแอร์ตัวนั้นทันที
+    function jumpToEdit(originalIndex) {
+        // 1. ปิด Modal
+        detailsModalInstance.hide();
+        
+        // 2. สลับไปหน้า Manage
+        showView('manage');
+        
+        // 3. รีเซ็ตฟิลเตอร์หน้า Manage เป็น "ทั้งหมด" เพื่อให้หาเจอแน่นอน
+        document.getElementById('filter-manage-dept').value = 'all';
+        document.getElementById('filter-manage-loc').value = 'all';
+        updateAirSelectOptions(); // โหลด List Dropdown ใหม่
+        
+        // 4. เลือกรายการแอร์และสั่งโหลดข้อมูลเข้า Form
+        document.getElementById('select-air').value = originalIndex;
+        loadAirDataToForm();
+        
+        // 5. เลื่อนจอลงมาที่ฟอร์มนิดนึง
+        window.scrollTo({ top: document.getElementById('airForm').offsetTop - 100, behavior: 'smooth' });
+    }
+    // ====================================================================
+
     function loadAirDataToForm() {
         const index = document.getElementById('select-air').value;
         if (index === "") { prepareForm('new'); return; }
@@ -473,35 +610,31 @@
         const item = allData[index];
         document.getElementById('rowId').value = item.rowId; 
         
-        // ข้อมูลทั่วไปที่ไม่ใช่ปริมาตรห้อง
         const fields = ['assetId', 'brand', 'model', 'type', 'category', 'btu', 'seer', 'elecCost', 'installYear', 'hrDay', 'dayWeek', 'hrWeek', 'status', 'maintenance', 'owner', 'location', 'sunlight', 'useFan', 'totalAirRoom', 'zone'];
         fields.forEach(f => { 
             if(document.getElementById(f)) document.getElementById(f).value = item[f] || ""; 
         });
 
-        // จัดการแยกข้อมูล ปริมาตรห้อง (สมมติเก็บใน Sheet เป็น 4x5x3) ให้กลับมาใส่ช่อง กว้าง ยาว สูง
         const rv = String(item.roomVol || "").toLowerCase();
-        // แยกตัวเลขด้วยเครื่องหมาย x หรือ * หรือ ลูกน้ำ
         const parts = rv.split(/x|\*|,/); 
         if (parts.length === 3) {
             document.getElementById('roomWidth').value = parseFloat(parts[0].trim()) || "";
             document.getElementById('roomLength').value = parseFloat(parts[1].trim()) || "";
             document.getElementById('roomHeight').value = parseFloat(parts[2].trim()) || "";
         } else {
-            // ถ้าเป็นข้อมูลเก่าที่มีแค่ตัวเลขปริมาตรรวมๆ จะปล่อยช่องว่างไว้ให้กรอกใหม่
             document.getElementById('roomWidth').value = "";
             document.getElementById('roomLength').value = "";
             document.getElementById('roomHeight').value = "";
         }
         
-        calculateVolume(); // คำนวณปริมาตรโชว์
+        calculateVolume(); 
         highlightEmptyFields();
     }
 
     function prepareForm(type) {
         document.getElementById('airForm').reset();
         document.getElementById('rowId').value = ""; 
-        document.getElementById('roomVolDisplay').value = ""; // เคลียร์ช่องปริมาตร
+        document.getElementById('roomVolDisplay').value = ""; 
         
         if(type === 'new') {
             document.getElementById('select-air').value = "";
@@ -517,7 +650,6 @@
         e.preventDefault(); 
         document.getElementById('loading').style.display = 'block';
 
-        // นำ กว้าง ยาว สูง มารวมกันเป็น String "4x5x3" เพื่อส่งไปเซฟลงคอลัมน์เดิม
         const w = document.getElementById('roomWidth').value;
         const l = document.getElementById('roomLength').value;
         const h = document.getElementById('roomHeight').value;
@@ -535,7 +667,7 @@
                 dayWeek: document.getElementById('dayWeek').value, hrWeek: document.getElementById('hrWeek').value,
                 status: document.getElementById('status').value, maintenance: document.getElementById('maintenance').value,
                 owner: document.getElementById('owner').value, location: document.getElementById('location').value,
-                roomVol: combinedRoomVol, // ส่งข้อมูลที่รวมแล้วไป
+                roomVol: combinedRoomVol, 
                 sunlight: document.getElementById('sunlight').value, useFan: document.getElementById('useFan').value, 
                 totalAirRoom: document.getElementById('totalAirRoom').value, zone: document.getElementById('zone').value
             }
@@ -564,6 +696,5 @@
     }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
